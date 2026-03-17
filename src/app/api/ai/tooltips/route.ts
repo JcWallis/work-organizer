@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { anthropic } from "@/lib/anthropic";
-import { auth } from "@/lib/auth";
+
 
 export async function POST(req: NextRequest) {
-  const session = await auth();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { context } = await req.json();
   if (!context) return NextResponse.json({ error: "context required" }, { status: 400 });
