@@ -1,33 +1,26 @@
-"use client";
+import { signIn } from "@/lib/auth";
+import { AuthError } from "next-auth";
+import { redirect } from "next/navigation";
 
-import { useState } from "react";
-import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
-
-export default function LoginPage() {
-  const router = useRouter();
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
-
-    const res = await signIn("credentials", {
-      username,
-      password,
-      redirect: false,
-    });
-
-    if (res?.error) {
-      setError("Invalid username or password.");
-    } else {
-      router.push("/");
+export default function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>;
+}) {
+  async function login(formData: FormData) {
+    "use server";
+    try {
+      await signIn("credentials", {
+        username: formData.get("username"),
+        password: formData.get("password"),
+        redirectTo: "/",
+      });
+    } catch (error) {
+      if (error instanceof AuthError) {
+        redirect(`/login?error=1`);
+      }
+      throw error;
     }
-    setLoading(false);
   }
 
   return (
@@ -36,15 +29,14 @@ export default function LoginPage() {
         <h1 className="text-2xl font-bold text-white mb-1">Work Organizer</h1>
         <p className="text-gray-400 text-sm mb-6">Sign in to your workspace</p>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form action={login} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-1">
               Username
             </label>
             <input
+              name="username"
               type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
               className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               placeholder="admin"
               required
@@ -55,28 +47,30 @@ export default function LoginPage() {
               Password
             </label>
             <input
+              name="password"
               type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
               className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               placeholder="••••••••"
               required
             />
           </div>
 
-          {error && (
-            <p className="text-red-400 text-sm">{error}</p>
-          )}
+          <LoginError />
 
           <button
             type="submit"
-            disabled={loading}
-            className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-medium py-2 rounded-lg transition-colors"
+            className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-2 rounded-lg transition-colors"
           >
-            {loading ? "Signing in…" : "Sign in"}
+            Sign in
           </button>
         </form>
       </div>
     </div>
   );
+}
+
+// Separate client component just for the error message
+import ErrorMessage from "./ErrorMessage";
+function LoginError() {
+  return <ErrorMessage />;
 }

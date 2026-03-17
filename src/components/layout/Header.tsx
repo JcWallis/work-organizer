@@ -1,6 +1,5 @@
 "use client";
 
-import { signOut } from "next-auth/react";
 import Link from "next/link";
 import { useState } from "react";
 import CommandPalette from "./CommandPalette";
@@ -27,12 +26,14 @@ export default function Header() {
           >
             + New Item
           </Link>
-          <button
-            onClick={() => signOut({ callbackUrl: "/login" })}
-            className="text-sm text-gray-400 hover:text-white transition-colors"
-          >
-            Sign out
-          </button>
+          <form action="/api/auth/signout" method="POST">
+            <button
+              type="submit"
+              className="text-sm text-gray-400 hover:text-white transition-colors"
+            >
+              Sign out
+            </button>
+          </form>
         </div>
       </header>
 
